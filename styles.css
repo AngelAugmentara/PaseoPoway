@@ -1,0 +1,835 @@
+/* ==========================================================================
+   POWAY PASEO — styles.css
+   Static, mobile-first, no build step, no frameworks.
+
+   §1  Design tokens      (retheme from this block only)
+   §2  Reset and base
+   §3  Type utilities     (.eyebrow, .wordmark)
+   §4  Layout             (.section, .site-header, .site-footer)
+   §5  Hero
+   §6  Rendering slots    (arch-masked placeholders)
+   §7  Stat strip
+   §8  Architecture
+   §9  Residences         (courtyard grid)
+   §10 Benefits list
+   §11 Restaurant & retail (dark)
+   §12 Location
+   §13 FAQ
+   §14 Closing CTA (dark)
+   §15 Forms, success state, chips
+   §16 Buttons
+   §17 Motion (scroll reveals, reduced motion)
+   §18 Utilities
+   ========================================================================== */
+
+
+/* --------------------------------------------------------------------------
+   §1 DESIGN TOKENS
+   Everything visual reads from these custom properties. Components never
+   reference a raw hex; they reference a ROLE (--text, --rule, ...), and dark
+   sections re-map the roles. To retheme, edit this block only.
+   -------------------------------------------------------------------------- */
+:root {
+  /* ---- Palette: the only eight colors on the site ---------------------- */
+  --c-plaster: #F1EFEB; /* warm plaster  · page background                   */
+  --c-ink:     #434341; /* near-black    · primary text (8.6:1 on plaster)    */
+  --c-dark:    #54504A; /* dark warm     · headings on light; dark fills      */
+  --c-slate:   #636562; /* slate gray    · secondary text (5.1:1 on plaster)  */
+  --c-taupe:   #837E74; /* taupe         · borders, muted UI, slot fills.
+                                           3.5:1 on plaster → large text only  */
+  --c-stone:   #817A6E; /* stone         · large numerals on plaster (3.7:1);
+                                           hairlines on dark. NOT body text,
+                                           and NOT text on dark (1.9:1).       */
+  --c-sage:    #979083; /* sage          · dividers, rules, hover halos.
+                                           Never used as text (2.8:1).         */
+  --c-accent:  #6D595A; /* mauve-brown   · PRIMARY CTA ONLY. Nowhere else.     */
+
+  /* ---- Roles (light sections). Dark sections override these in §4. ----- */
+  --bg:         var(--c-plaster);
+  --text:       var(--c-ink);
+  --text-2:     var(--c-slate);
+  --heading:    var(--c-dark);
+  --rule:       var(--c-sage);     /* hairlines, dividers                     */
+  --border:     var(--c-taupe);    /* field and chip borders (3.5:1 boundary) */
+  --focus:      var(--c-ink);      /* focus ring                              */
+  --field-bg:   var(--c-plaster);
+  --field-text: var(--c-ink);
+  --btn-edge:   transparent;       /* plaster on dark fills → CTA keeps a
+                                      visible boundary (mauve on dark = 1.2:1)*/
+  --btn-halo:   var(--c-accent);   /* hover ring color                        */
+  --slot-fill:  var(--c-taupe);
+
+  /* ---- Type ------------------------------------------------------------- */
+  --font-display: "Marcellus", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --font-body:    "Karla", "Gill Sans", "Segoe UI", Helvetica, Arial, sans-serif;
+
+  /* Modular scale. Ratio 1.20 at 360px viewport → 1.25 at 1280px, fluid.   */
+  --step--2: clamp(0.694rem, 0.684rem + 0.045vw, 0.72rem);
+  --step--1: clamp(0.833rem, 0.807rem + 0.117vw, 0.9rem);
+  --step-0:  clamp(1rem,     0.951rem + 0.217vw, 1.125rem);
+  --step-1:  clamp(1.2rem,   1.119rem + 0.358vw, 1.406rem);
+  --step-2:  clamp(1.44rem,  1.316rem + 0.553vw, 1.758rem);
+  --step-3:  clamp(1.728rem, 1.544rem + 0.816vw, 2.197rem);
+  --step-4:  clamp(2.074rem, 1.811rem + 1.17vw,  2.747rem);
+  --step-5:  clamp(2.488rem, 2.118rem + 1.643vw, 3.433rem);
+  --step-6:  clamp(2.986rem, 2.476rem + 2.268vw, 4.29rem);
+
+  --leading-tight: 1.05;
+  --leading-snug:  1.3;
+  --leading-body:  1.6;
+
+  /* Optical letterspacing. Wordmark and eyebrows are tracked; display sizes
+     are set slightly tight; buttons get a light track for legibility.        */
+  --track-wordmark: 0.34em;
+  --track-eyebrow:  0.16em;
+  --track-button:   0.1em;
+  --track-display: -0.01em;
+
+  /* ---- Space and measure ------------------------------------------------ */
+  --gutter:    clamp(1.25rem, 4.5vw, 4rem);
+  --section:   clamp(4rem, 9vw, 8rem);
+  --max:       78rem;
+  --measure:   60ch;
+  --hairline:  1px;
+  --radius:    2px;
+  --control-h: 3rem;   /* 48px tap targets */
+
+  /* ---- Motion ----------------------------------------------------------- */
+  --dur:  700ms;
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  /* ---- Plaster grain: one 280px SVG tile, feTurbulence at 7% alpha ------ */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='280' height='280'%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch' seed='7'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='table' tableValues='0 0.07'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='280' height='280' filter='url(%23g)'/%3E%3C/svg%3E");
+}
+
+
+/* --------------------------------------------------------------------------
+   §2 RESET AND BASE
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-padding-top: 1rem;
+}
+
+body {
+  margin: 0;
+  background: var(--grain), var(--bg);
+  color: var(--text);
+  font: 400 var(--step-0) / var(--leading-body) var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+img, svg { display: block; max-width: 100%; }
+h1, h2, h3, p, figure, dl, dd, ol, ul { margin: 0; }
+button, input, textarea { font: inherit; color: inherit; }
+a { color: inherit; }
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  color: var(--heading);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--track-display);
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+::selection { background: var(--c-sage); color: var(--c-plaster); }
+
+
+/* --------------------------------------------------------------------------
+   §3 TYPE UTILITIES
+   -------------------------------------------------------------------------- */
+.eyebrow {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: var(--step--1);
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--text-2);
+  line-height: 1.4;
+}
+
+/* Wordmark — treatment #1 from brand.html: letterspaced caps + hairline. */
+.wordmark {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.55em;
+  color: var(--heading);
+  font-family: var(--font-display);
+  font-size: var(--step--1);
+  line-height: 1;
+  letter-spacing: var(--track-wordmark);
+  text-transform: uppercase;
+  text-decoration: none;
+}
+.wordmark__text {
+  display: block;
+  white-space: nowrap;
+  margin-right: calc(-1 * var(--track-wordmark)); /* trim trailing track so the rule ends on the Y */
+}
+.wordmark__rule {
+  display: block;
+  height: var(--hairline);
+  background: var(--rule);
+}
+.wordmark:hover .wordmark__rule { background: var(--heading); }
+
+
+/* --------------------------------------------------------------------------
+   §4 LAYOUT
+   -------------------------------------------------------------------------- */
+.section { padding: var(--section) var(--gutter); }
+.section--tight { padding-block: calc(var(--section) * 0.7); }
+.section__inner { max-width: var(--max); margin-inline: auto; }
+.section__head {
+  display: grid;
+  gap: 1rem;
+  max-width: 40rem;
+  margin-bottom: clamp(2.5rem, 6vw, 4.5rem);
+}
+.section__title {
+  font-size: var(--step-4);
+  text-wrap: balance;
+}
+
+/* Modifier: centers a section's content block as a unit on wide screens,
+   for a section whose content (measure-capped, left-aligned text) would
+   otherwise leave a wide empty gap on the right of a full-width row. Text
+   inside stays left-aligned; only the block's position changes. Below the
+   desktop breakpoint content already runs near full width, so no override
+   is needed there. Reapply to any other section by adding this class. */
+@media (min-width: 60em) {
+  .section--centered .section__inner { max-width: 44rem; }
+}
+
+/* Pairs two sibling sections into side-by-side columns on desktop only.
+   Below the breakpoint the wrapper does nothing at all, so the sections
+   stack in document order exactly as they did before. Column widths follow
+   the same asymmetric 12-column language used by §8 and §11: the left
+   column takes five, a sixth is left empty as breathing room, and the
+   right column takes the remaining six for the content that needs it. */
+@media (min-width: 60em) {
+  .section-pair {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    column-gap: var(--gutter);
+    align-items: start;
+    max-width: var(--max);
+    margin-inline: auto;
+    padding: var(--section) var(--gutter);
+  }
+  .section-pair > .section { padding: 0; }
+  /* The left column sticks while the taller right column scrolls past it,
+     the same treatment .arch__text gets in §8. It travels within its own
+     grid area, so it releases at the bottom of the row. */
+  .section-pair > .section:nth-child(1) {
+    grid-column: 1 / 6;
+    position: sticky;
+    top: 2rem;
+  }
+  .section-pair > .section:nth-child(2) { grid-column: 7 / 13; }
+  .section-pair .section__inner { max-width: none; }
+  /* The head margin is sized for a full-width section; tighten it here so
+     both columns start their content at the same height. */
+  .section-pair .section__head { margin-bottom: clamp(2rem, 3vw, 2.75rem); }
+}
+
+/* Dark sections: re-map the roles. Only plaster is used for text on dark;
+   stone/sage/taupe all fail AA on #54504A (see README contrast table).      */
+.section--dark {
+  --bg:         var(--c-dark);
+  --text:       var(--c-plaster);
+  --text-2:     var(--c-plaster);
+  --heading:    var(--c-plaster);
+  --rule:       var(--c-stone);
+  --border:     var(--c-plaster);
+  --focus:      var(--c-plaster);
+  --btn-edge:   var(--c-plaster);
+  --btn-halo:   var(--c-plaster);
+  background: var(--grain), var(--bg);
+  color: var(--text);
+}
+
+.site-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  max-width: var(--max);
+  margin-inline: auto;
+  padding: clamp(1.25rem, 3vw, 2rem) var(--gutter);
+}
+.site-header__place { padding-top: 0.1em; }
+
+.site-footer {
+  border-top: var(--hairline) solid var(--rule);
+  padding: 3rem var(--gutter) 4rem;
+  font-size: var(--step--1);
+  color: var(--text-2);
+  line-height: 1.55;
+}
+.site-footer__inner {
+  max-width: var(--max);
+  margin-inline: auto;
+  display: grid;
+  gap: 2.5rem;
+}
+.site-footer__brand, .site-footer__meta { display: grid; gap: 0.9rem; align-content: start; }
+.site-footer__eho { display: flex; gap: 1rem; align-items: flex-start; }
+.site-footer__eho svg { flex: none; width: 2.25rem; height: 2.25rem; color: var(--text); }
+.site-footer a {
+  text-decoration-color: var(--rule);
+  text-underline-offset: 0.2em;
+}
+.site-footer a:hover { text-decoration-color: currentColor; }
+
+@media (min-width: 60em) {
+  .site-footer__inner { grid-template-columns: 1.1fr 1.2fr 0.8fr; gap: var(--gutter); }
+}
+
+
+/* --------------------------------------------------------------------------
+   §5 HERO
+   Mobile: wordmark (header) → eyebrow → H1 → lede → form, then the arch
+   peeks in below the fold as the scroll cue. Desktop: copy left (cols 1–6),
+   arch right (cols 8–12), lifted 3rem so the composition is off-axis.
+   -------------------------------------------------------------------------- */
+.hero {
+  max-width: var(--max);
+  margin-inline: auto;
+  padding: clamp(1rem, 3vw, 2.5rem) var(--gutter) var(--section);
+  display: grid;
+  gap: 3rem;
+}
+.hero__copy { display: grid; gap: 1.5rem; max-width: 36rem; }
+.hero__title {
+  font-size: clamp(2.4rem, 1.6rem + 3.6vw, 4.75rem);
+  text-wrap: balance;
+}
+.hero__lede {
+  font-size: var(--step-0);
+  line-height: 1.5;
+  color: var(--text-2);
+  max-width: 34rem;
+}
+.hero__figure {
+  width: min(100%, 22rem);
+  margin-left: auto;
+}
+
+@media (min-width: 48em) {
+  .hero__lede { font-size: var(--step-1); }
+}
+@media (min-width: 60em) {
+  .hero {
+    grid-template-columns: repeat(12, 1fr);
+    column-gap: var(--gutter);
+    align-items: center;
+    min-height: min(calc(100svh - 7rem), 52rem);
+  }
+  .hero__copy { grid-column: 1 / 7; }
+  .hero__figure {
+    grid-column: 8 / 13;
+    width: auto;
+    margin: -3rem 0 0;
+  }
+}
+
+
+/* --------------------------------------------------------------------------
+   §6 RENDERING SLOT (hero only)
+   The slot is a <figure> with: the CSS/SVG-composed placeholder art, a
+   transparent <img> sized to the slot's aspect ratio (drop the real file in
+   its src and move data-alt into alt), and a small dev-facing tag.
+   The arch is a border-radius: a true semicircle when the vertical radius
+   equals half the width; a shallow ellipse reads as a segmental arch.
+   -------------------------------------------------------------------------- */
+.slot {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--slot-fill);
+  aspect-ratio: 3 / 4;                              /* semicircular  */
+  border-radius: 50% 50% 0 0 / 37.5% 37.5% 0 0;     /* 0.5w ÷ 1.333w */
+}
+/* Other ratios, if more slots are added later:
+   4:5 semicircular → 50% 50% 0 0 / 40% 40% 0 0
+   4:3 segmental    → 50% 50% 0 0 / 30% 30% 0 0   */
+
+.slot__art, .slot__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.slot__art { background-image: var(--grain); }
+.slot__img { object-fit: cover; }
+
+/* Dev-facing label. Delete this rule (or the <figcaption>) at launch. */
+.slot__tag {
+  position: absolute;
+  left: 0.75rem;
+  bottom: 0.75rem;
+  z-index: 1;
+  padding: 0.35em 0.65em;
+  background: var(--c-plaster);
+  color: var(--c-dark);
+  font-size: var(--step--2);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+
+/* --------------------------------------------------------------------------
+   §7 STAT STRIP
+   -------------------------------------------------------------------------- */
+.stats {
+  border-top: var(--hairline) solid var(--rule);
+  border-bottom: var(--hairline) solid var(--rule);
+}
+.stats__list {
+  list-style: none;
+  margin: 0 auto;
+  padding: 0;
+  max-width: var(--max);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.stats__item {
+  display: grid;
+  gap: 0.4rem;
+  padding: 1.5rem var(--gutter);
+}
+.stats__item:nth-child(odd)  { border-right: var(--hairline) solid var(--rule); }
+.stats__item:nth-child(-n+2) { border-bottom: var(--hairline) solid var(--rule); }
+.stats__value {
+  font-family: var(--font-display);
+  font-size: var(--step-3);
+  line-height: 1.05;
+  color: var(--heading);
+  overflow-wrap: anywhere;
+}
+@media (min-width: 48em) {
+  .stats__list { grid-template-columns: repeat(4, 1fr); }
+  .stats__item { padding-block: 1.75rem; }
+  .stats__item:nth-child(-n+2) { border-bottom: 0; }
+  .stats__item:not(:last-child) { border-right: var(--hairline) solid var(--rule); }
+  .stats__item:last-child { border-right: 0; }
+}
+
+
+/* --------------------------------------------------------------------------
+   §8 ARCHITECTURE
+   Text only. Heading in cols 1–5, body in cols 7–12, so the empty column
+   between them does the work the second arch used to do.
+   -------------------------------------------------------------------------- */
+.arch { display: grid; gap: 1.5rem var(--gutter); }
+.arch__text { display: grid; gap: 1.25rem; max-width: 34rem; }
+.arch__body {
+  display: grid;
+  gap: 1em;
+  max-width: 36rem;
+  font-size: var(--step-1);
+  line-height: 1.55;
+}
+
+@media (min-width: 60em) {
+  .arch { grid-template-columns: repeat(12, 1fr); align-items: start; }
+  .arch__text { grid-column: 1 / 6; position: sticky; top: 2rem; }
+  .arch__body { grid-column: 7 / 13; padding-top: 0.6rem; }
+}
+
+
+/* --------------------------------------------------------------------------
+   §9 RESIDENCES — a staggered, type-only list
+   Two columns on desktop, the right column dropped by a row-and-a-half so
+   the four entries read as a courtyard plan rather than a table.
+   -------------------------------------------------------------------------- */
+.res {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 0 var(--gutter);
+}
+.res__item {
+  display: grid;
+  grid-template-columns: 3.5rem 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 1rem;
+  row-gap: 0.5rem;
+  align-items: baseline;
+  align-content: start;
+  padding: 1.6rem 0 1.8rem;
+  border-top: var(--hairline) solid var(--rule);
+}
+.res__item:last-child { border-bottom: var(--hairline) solid var(--rule); }
+.res__num {
+  grid-row: 1 / 3;
+  font-family: var(--font-display);
+  font-size: var(--step-3);   /* ≥ 27px: stone passes as large text (3.7:1) */
+  line-height: 1;
+  color: var(--c-stone);
+}
+.res__name { font-size: var(--step-3); }
+.res__line { grid-column: 2; color: var(--text-2); max-width: 30rem; }
+
+@media (min-width: 60em) {
+  .res { grid-template-columns: repeat(12, 1fr); }
+  .res__item { padding-block: 2rem 2.4rem; }
+  .res__item:nth-child(odd)  { grid-column: 1 / 6; }
+  .res__item:nth-child(even) { grid-column: 8 / 13; margin-top: 5rem; }
+  .res__item:nth-child(1) { grid-row: 1; }
+  .res__item:nth-child(2) { grid-row: 1; }
+  .res__item:nth-child(3) { grid-row: 2; }
+  .res__item:nth-child(4) { grid-row: 2; }
+  .res__item:nth-child(3), .res__item:nth-child(4) { border-bottom: var(--hairline) solid var(--rule); }
+}
+
+
+/* --------------------------------------------------------------------------
+   §10 BENEFITS — a numbered list, not cards
+   -------------------------------------------------------------------------- */
+.benefits {
+  list-style: none;
+  padding: 0;
+  max-width: 44rem;
+  counter-reset: benefit;
+  border-top: var(--hairline) solid var(--rule);
+}
+.benefits__item {
+  counter-increment: benefit;
+  display: grid;
+  grid-template-columns: 3.5rem 1fr;
+  gap: 1rem;
+  align-items: baseline;
+  padding: 1.4rem 0;
+  border-bottom: var(--hairline) solid var(--rule);
+  font-size: var(--step-1);
+  line-height: var(--leading-snug);
+}
+.benefits__item::before {
+  content: counter(benefit, decimal-leading-zero);
+  font-family: var(--font-display);
+  font-size: var(--step-3);   /* ≥ 27px: stone passes as large text (3.7:1) */
+  line-height: 1;
+  color: var(--c-stone);
+}
+
+
+/* --------------------------------------------------------------------------
+   §11 RESTAURANT & RETAIL (dark, quieter)
+   -------------------------------------------------------------------------- */
+.retail { display: grid; gap: 2.5rem var(--gutter); }
+.retail__head { display: grid; gap: 1.25rem; max-width: 36rem; }
+.retail__title { font-size: var(--step-3); text-wrap: balance; } /* one step below residential H2s */
+.retail__specs {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.85rem 1.5rem;
+  align-self: start;
+  align-content: start;
+  padding-top: 1.25rem;
+  border-top: var(--hairline) solid var(--rule);
+  font-size: var(--step--1);
+  max-width: 34rem;
+}
+.retail__specs dt {
+  font-weight: 500;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  font-size: var(--step--2);
+  padding-top: 0.2em;
+}
+.retail__form { max-width: 34rem; }
+
+@media (min-width: 60em) {
+  .retail { grid-template-columns: repeat(12, 1fr); }
+  .retail__head  { grid-column: 1 / 7; }
+  .retail__specs { grid-column: 8 / 13; }
+  .retail__form  { grid-column: 1 / 7; }
+}
+
+
+/* --------------------------------------------------------------------------
+   §12 LOCATION
+   -------------------------------------------------------------------------- */
+.location { display: grid; gap: 1.5rem; max-width: 40rem; }
+.location__facts { border-top: var(--hairline) solid var(--rule); }
+.location__facts > div {
+  display: grid;
+  grid-template-columns: 9rem 1fr;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-bottom: var(--hairline) solid var(--rule);
+}
+.location__facts dt {
+  font-weight: 500;
+  font-size: var(--step--2);
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--text-2);
+  padding-top: 0.35em;
+}
+
+
+/* --------------------------------------------------------------------------
+   §13 FAQ — native <details>; the `name` attribute makes it exclusive where
+   supported, main.js does the same for older browsers.
+   -------------------------------------------------------------------------- */
+.faq { max-width: 44rem; border-top: var(--hairline) solid var(--rule); }
+.faq__item { border-bottom: var(--hairline) solid var(--rule); }
+.faq__q {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1.5rem;
+  padding: 1.25rem 0;
+  font-family: var(--font-display);
+  font-size: var(--step-1);
+  line-height: var(--leading-snug);
+  color: var(--heading);
+}
+.faq__q::-webkit-details-marker { display: none; }
+.faq__q:focus-visible { outline-offset: 6px; }
+.faq__icon {
+  position: relative;
+  flex: none;
+  width: 0.8rem;
+  height: 0.8rem;
+  align-self: center;
+  color: var(--text-2);
+}
+.faq__icon::before, .faq__icon::after {
+  content: "";
+  position: absolute;
+  background: currentColor;
+}
+.faq__icon::before { left: 0; right: 0; top: 50%; height: 1px; }
+.faq__icon::after  { top: 0; bottom: 0; left: 50%; width: 1px; transition: transform 250ms var(--ease); }
+.faq__item[open] .faq__icon::after { transform: rotate(90deg); }
+.faq__a { padding: 0 0 1.4rem; max-width: 38rem; color: var(--text-2); }
+
+
+/* --------------------------------------------------------------------------
+   §14 CLOSING CTA (dark, centered)
+   -------------------------------------------------------------------------- */
+.closing {
+  display: grid;
+  gap: 1.5rem;
+  justify-items: center;
+  text-align: center;
+  max-width: 42rem;
+}
+.closing .signup { width: 100%; max-width: 32rem; margin-top: 0.5rem; }
+.closing .form__note { text-align: center; }
+.closing .success { justify-items: center; text-align: center; }
+.closing .chips__row, .closing .chips__actions { justify-content: center; }
+
+
+/* --------------------------------------------------------------------------
+   §15 FORMS, SUCCESS STATE, CHIPS
+   -------------------------------------------------------------------------- */
+.signup { display: block; }
+.form { display: grid; gap: 0.6rem; }
+.form__row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.form__field { flex: 1 1 10rem; display: grid; }
+.form__input {
+  width: 100%;
+  min-height: var(--control-h);
+  padding: 0 1rem;
+  background: var(--field-bg);
+  color: var(--field-text);
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--radius);
+  appearance: none;
+}
+.form__input::placeholder { color: var(--c-slate); opacity: 1; }
+.form__input:focus { border-color: var(--field-text); }
+.form__input:focus-visible { outline-offset: 2px; }
+.form__input[aria-invalid="true"] { border-color: var(--field-text); }
+.form__error {
+  font-size: var(--step--1);
+  color: var(--text-2);
+}
+.form__note {
+  font-size: var(--step--1);
+  color: var(--text-2);
+}
+
+.success {
+  display: grid;
+  gap: 1rem;
+  padding-top: 1.5rem;
+  border-top: var(--hairline) solid var(--rule);
+}
+.success:focus { outline: none; }
+.success__title {
+  font-family: var(--font-display);
+  font-size: var(--step-2);
+  line-height: 1.15;
+  color: var(--heading);
+}
+.success__lead { color: var(--text-2); max-width: 34rem; }
+.success__done { color: var(--text-2); }
+/* Focus lands here when the last question is answered, so the control that
+   was just activated can be removed without dropping focus to <body>. It is
+   a closing message, not something to act on, so it takes no focus ring —
+   the usual treatment for a focus-management target. */
+.success__done:focus,
+.success__done:focus-visible { outline: none; }
+
+/* Holds both question rows so they can collapse together. Reproduces the
+   gap they had as direct children of .success. */
+.profiling { display: grid; gap: 1rem; }
+
+.chips { display: grid; gap: 0.75rem; padding-top: 0.5rem; }
+.chips__q { font-weight: 500; }
+.chips__opt {
+  font-weight: 400;
+  font-size: var(--step--1);
+  color: var(--text-2);
+  margin-left: 0.5em;
+}
+.chips__row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.chips__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; }
+.chips__status { font-size: var(--step--1); color: var(--text-2); }
+
+.chip {
+  min-height: var(--control-h);
+  padding: 0 1.1rem;
+  border: var(--hairline) solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text);
+  font-size: var(--step--1);
+  cursor: pointer;
+}
+.chip:hover { border-color: var(--text); }
+.chip[aria-pressed="true"] {
+  background: var(--text);
+  color: var(--bg);
+  border-color: var(--text);
+}
+
+.note { display: grid; gap: 0.6rem; }
+.note__label { font-weight: 500; }
+.note__field {
+  width: 100%;
+  min-height: 6rem;
+  padding: 0.75rem 1rem;
+  background: var(--field-bg);
+  color: var(--field-text);
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--radius);
+  resize: vertical;
+}
+.note__field:focus { border-color: var(--field-text); }
+
+
+/* --------------------------------------------------------------------------
+   §16 BUTTONS
+   .btn is the only place the accent color appears.
+   -------------------------------------------------------------------------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--control-h);
+  padding: 0 1.4rem;
+  background: var(--c-accent);
+  color: var(--c-plaster);
+  border: var(--hairline) solid var(--btn-edge);
+  border-radius: var(--radius);
+  font-weight: 800;
+  font-size: var(--step--1);
+  letter-spacing: var(--track-button);
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  text-decoration: none;
+  transition: outline-offset 150ms var(--ease);
+}
+.btn:hover { outline: var(--hairline) solid var(--btn-halo); outline-offset: 3px; }
+.btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+.btn[aria-busy="true"] { cursor: progress; }
+
+.btn--text {
+  min-height: 2.75rem;
+  padding: 0.5rem 0.25rem;
+  border: 0;
+  background: none;
+  color: var(--text-2);
+  font-size: var(--step--1);
+  text-decoration: underline;
+  text-decoration-color: var(--rule);
+  text-underline-offset: 0.22em;
+  cursor: pointer;
+}
+.btn--text:hover { text-decoration-color: currentColor; }
+
+
+/* --------------------------------------------------------------------------
+   §17 MOTION
+   Reveals only run when JS is present (html.js) and the user has not asked
+   for reduced motion. The hero is never animated (it is the LCP).
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+  .js .reveal {
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease);
+  }
+  .js .reveal.is-visible { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+
+
+/* --------------------------------------------------------------------------
+   §18 UTILITIES
+   -------------------------------------------------------------------------- */
+.visually-hidden {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+.skip-link {
+  position: absolute;
+  left: var(--gutter);
+  top: -100%;
+  z-index: 10;
+  padding: 0.75rem 1rem;
+  background: var(--c-ink);
+  color: var(--c-plaster);
+  text-decoration: none;
+}
+.skip-link:focus { top: 0.75rem; }
+
+/* Honeypot: off-canvas, not aria-hidden-focusable (tabindex="-1"). */
+.hp {
+  position: absolute;
+  left: -10000px;
+  top: auto;
+  width: 1px; height: 1px;
+  overflow: hidden;
+}
+
+.sprite { position: absolute; width: 0; height: 0; overflow: hidden; }

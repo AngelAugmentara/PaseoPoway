@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Poway Paseo | Wordmark treatments</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Cormorant Garamond is loaded here only, for treatment #3. index.html loads Marcellus + Karla. -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus&family=Karla:wght@400;500&family=Cormorant+Garamond:ital,wght@1,500;1,600&display=swap">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Page chrome for the preview only */
+    .brand { max-width: var(--max); margin-inline: auto; padding: clamp(2rem, 5vw, 4rem) var(--gutter) 6rem; display: grid; gap: 4rem; }
+    .brand__intro { display: grid; gap: 1rem; max-width: 40rem; }
+    .brand__intro h1 { font-size: var(--step-4); }
+    .brand__intro p { color: var(--text-2); }
+    .treatment { display: grid; gap: 1.25rem; border-top: var(--hairline) solid var(--rule); padding-top: 1.5rem; }
+    .treatment__head { display: grid; grid-template-columns: 3rem 1fr; gap: 1rem; align-items: baseline; max-width: 44rem; }
+    .treatment__num { font-family: var(--font-display); font-size: var(--step-3); color: var(--c-stone); line-height: 1; }
+    .treatment__name { font-family: var(--font-display); font-size: var(--step-2); color: var(--heading); }
+    .treatment__desc { color: var(--text-2); margin-top: .35rem; }
+    .specimens { display: grid; gap: 1rem; }
+    .specimens > * { min-width: 0; }
+    .swatch { display: grid; gap: 2.5rem; align-content: center; justify-items: start; padding: clamp(1.5rem, 4vw, 3rem); min-height: 18rem; border: var(--hairline) solid var(--rule); overflow: hidden; }
+    .swatch--dark { --heading: var(--c-plaster); --text: var(--c-plaster); --text-2: var(--c-plaster); --rule: var(--c-stone); background: var(--grain), var(--c-dark); color: var(--c-plaster); border: 0; }
+    .swatch__label { font-size: var(--step--2); letter-spacing: var(--track-eyebrow); text-transform: uppercase; color: var(--text-2); }
+    .size-lg { font-size: clamp(2.2rem, 5vw, 4.25rem); }
+    .size-md { font-size: 1.6rem; }
+    .size-sm { font-size: var(--step--1); }
+    .row { display: flex; flex-wrap: wrap; gap: 3rem; align-items: flex-end; }
+    .row > div { display: grid; gap: .75rem; }
+
+    /* ---- Treatment #2: stacked, with an SVG arch glyph ------------------ */
+    .wm2 { display: inline-grid; justify-items: center; gap: .3em; color: var(--heading); font-family: var(--font-display); line-height: 1; letter-spacing: .3em; text-transform: uppercase; text-decoration: none; }
+    .wm2__arch { width: 1.35em; height: auto; margin-bottom: .1em; color: var(--rule); }
+    .wm2__line { display: block; padding-left: .3em; /* balances trailing track so the stack centers optically */ }
+
+    /* ---- Treatment #3: lowercase italic, tight-set ----------------------- */
+    .wm3 { display: inline-block; color: var(--heading); font-family: "Cormorant Garamond", "Iowan Old Style", Georgia, serif; font-style: italic; font-weight: 500; line-height: 1; letter-spacing: -.015em; word-spacing: -.14em; font-variant-ligatures: common-ligatures discretionary-ligatures contextual; text-transform: lowercase; text-decoration: none; }
+    .wm3 em { font-style: normal; font-weight: 600; }  /* "paseo" upright, so the two words interlock */
+
+    .assets { display: grid; gap: 1.5rem; border-top: var(--hairline) solid var(--rule); padding-top: 1.5rem; }
+    .assets__row { display: flex; flex-wrap: wrap; gap: 2rem; align-items: center; }
+    .assets img { border: var(--hairline) solid var(--rule); }
+    .assets h2 { font-size: var(--step-2); }
+    .assets p { color: var(--text-2); max-width: 60ch; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .92em; }
+    pre { margin: 0; padding: 1rem 1.25rem; border: var(--hairline) solid var(--rule); overflow-x: auto; font-size: var(--step--1); line-height: 1.5; color: var(--text); }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <a class="wordmark" href="index.html" aria-label="Poway Paseo, back to the landing page">
+      <span class="wordmark__text">Poway Paseo</span>
+      <span class="wordmark__rule" aria-hidden="true"></span>
+    </a>
+    <p class="eyebrow site-header__place">Brand preview</p>
+  </header>
+
+  <main class="brand">
+    <div class="brand__intro">
+      <p class="eyebrow">Wordmark</p>
+      <h1>Three type-only treatments for “Poway Paseo.”</h1>
+      <p>Each is CSS only, no image files. Treatment #1 is live in <code>index.html</code>. Every treatment is shown on plaster and on the dark fill, at display, mid, and header sizes. Pick one; the swap is a few lines of markup and is documented at the bottom of this page.</p>
+    </div>
+
+    <!-- #1 ------------------------------------------------------------------ -->
+    <section class="treatment" aria-labelledby="t1">
+      <div class="treatment__head">
+        <span class="treatment__num">01</span>
+        <div>
+          <h2 id="t1" class="treatment__name">Letterspaced caps with a hairline rule</h2>
+          <p class="treatment__desc">Marcellus, tracked 0.34em, with a one-pixel sage rule set under the full width of the word. The rule is the “iron”: thin, straight, doing one job. Reads as a stone inscription. This is the one in the live page and the source of the favicon.</p>
+        </div>
+      </div>
+      <div class="specimens">
+        <div class="swatch">
+          <span class="swatch__label">On plaster</span>
+          <a class="wordmark size-lg" href="#t1"><span class="wordmark__text">Poway Paseo</span><span class="wordmark__rule" aria-hidden="true"></span></a>
+          <div class="row">
+            <div><span class="swatch__label">Mid</span><a class="wordmark size-md" href="#t1"><span class="wordmark__text">Poway Paseo</span><span class="wordmark__rule" aria-hidden="true"></span></a></div>
+            <div><span class="swatch__label">Header</span><a class="wordmark size-sm" href="#t1"><span class="wordmark__text">Poway Paseo</span><span class="wordmark__rule" aria-hidden="true"></span></a></div>
+          </div>
+        </div>
+        <div class="swatch swatch--dark">
+          <span class="swatch__label">On dark warm</span>
+          <a class="wordmark size-lg" href="#t1"><span class="wordmark__text">Poway Paseo</span><span class="wordmark__rule" aria-hidden="true"></span></a>
+          <a class="wordmark size-sm" href="#t1"><span class="wordmark__text">Poway Paseo</span><span class="wordmark__rule" aria-hidden="true"></span></a>
+        </div>
+      </div>
+    </section>
+
+    <!-- #2 ------------------------------------------------------------------ -->
+    <section class="treatment" aria-labelledby="t2">
+      <div class="treatment__head">
+        <span class="treatment__num">02</span>
+        <div>
+          <h2 id="t2" class="treatment__name">Stacked, under a small arch glyph</h2>
+          <p class="treatment__desc">Marcellus caps, tracked 0.3em, “Poway” over “Paseo,” capped by a semicircular arch drawn as a single hairline SVG path. The only treatment with a mark. It stacks well for a square avatar, signage, or a stamp; it needs more vertical room in the header.</p>
+        </div>
+      </div>
+      <div class="specimens">
+        <div class="swatch">
+          <span class="swatch__label">On plaster</span>
+          <a class="wm2 size-lg" href="#t2"><svg class="wm2__arch" viewBox="0 0 24 14" aria-hidden="true" focusable="false"><path d="M1 14V11a11 11 0 0 1 22 0v3" fill="none" stroke="currentColor" stroke-width="1"/></svg><span class="wm2__line">Poway</span><span class="wm2__line">Paseo</span></a>
+          <div class="row">
+            <div><span class="swatch__label">Mid</span><a class="wm2 size-md" href="#t2"><svg class="wm2__arch" viewBox="0 0 24 14" aria-hidden="true" focusable="false"><path d="M1 14V11a11 11 0 0 1 22 0v3" fill="none" stroke="currentColor" stroke-width="1"/></svg><span class="wm2__line">Poway</span><span class="wm2__line">Paseo</span></a></div>
+            <div><span class="swatch__label">Header</span><a class="wm2 size-sm" href="#t2"><svg class="wm2__arch" viewBox="0 0 24 14" aria-hidden="true" focusable="false"><path d="M1 14V11a11 11 0 0 1 22 0v3" fill="none" stroke="currentColor" stroke-width="1"/></svg><span class="wm2__line">Poway</span><span class="wm2__line">Paseo</span></a></div>
+          </div>
+        </div>
+        <div class="swatch swatch--dark">
+          <span class="swatch__label">On dark warm</span>
+          <a class="wm2 size-lg" href="#t2"><svg class="wm2__arch" viewBox="0 0 24 14" aria-hidden="true" focusable="false"><path d="M1 14V11a11 11 0 0 1 22 0v3" fill="none" stroke="currentColor" stroke-width="1"/></svg><span class="wm2__line">Poway</span><span class="wm2__line">Paseo</span></a>
+          <a class="wm2 size-sm" href="#t2"><svg class="wm2__arch" viewBox="0 0 24 14" aria-hidden="true" focusable="false"><path d="M1 14V11a11 11 0 0 1 22 0v3" fill="none" stroke="currentColor" stroke-width="1"/></svg><span class="wm2__line">Poway</span><span class="wm2__line">Paseo</span></a>
+        </div>
+      </div>
+    </section>
+
+    <!-- #3 ------------------------------------------------------------------ -->
+    <section class="treatment" aria-labelledby="t3">
+      <div class="treatment__head">
+        <span class="treatment__num">03</span>
+        <div>
+          <h2 id="t3" class="treatment__name">Lowercase, tight-set, italic and roman</h2>
+          <p class="treatment__desc">Cormorant Garamond: “poway” in italic, “paseo” in upright, set with negative word spacing so the two words interlock where the descender of the y tucks under the p. Discretionary and contextual ligatures are switched on, though “poway paseo” contains no standard ligature pairs, so the interlock does the work a ligature would. Warmer and more editorial; the least “developer.” Choosing it adds one font to the index.html load.</p>
+        </div>
+      </div>
+      <div class="specimens">
+        <div class="swatch">
+          <span class="swatch__label">On plaster</span>
+          <a class="wm3 size-lg" href="#t3">poway <em>paseo</em></a>
+          <div class="row">
+            <div><span class="swatch__label">Mid</span><a class="wm3 size-md" href="#t3">poway <em>paseo</em></a></div>
+            <div><span class="swatch__label">Header</span><a class="wm3" style="font-size:1.15rem" href="#t3">poway <em>paseo</em></a></div>
+          </div>
+        </div>
+        <div class="swatch swatch--dark">
+          <span class="swatch__label">On dark warm</span>
+          <a class="wm3 size-lg" href="#t3">poway <em>paseo</em></a>
+          <a class="wm3" style="font-size:1.15rem" href="#t3">poway <em>paseo</em></a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Assets --------------------------------------------------------------- -->
+    <section class="assets" aria-labelledby="assets-title">
+      <h2 id="assets-title">Generated assets</h2>
+      <p>The favicon is the “P” of treatment #1 with its hairline, traced from the Marcellus outlines so it renders without loading the font. It is inlined in <code>index.html</code> and also shipped as <code>favicon.svg</code>. The share image is built the same way from <code>og-image.svg</code> and rendered to <code>og-image.png</code>.</p>
+      <div class="assets__row">
+        <img src="favicon.svg" width="16" height="16" alt="Favicon at 16 pixels">
+        <img src="favicon.svg" width="32" height="32" alt="Favicon at 32 pixels">
+        <img src="favicon.svg" width="64" height="64" alt="Favicon at 64 pixels">
+        <img src="favicon.svg" width="128" height="128" alt="Favicon at 128 pixels">
+      </div>
+      <img src="og-image.png" width="1200" height="630" alt="Open Graph share image: wordmark and arch with the headline 72 residences. One release." style="max-width: 40rem; height: auto;">
+    </section>
+
+    <!-- Switching ------------------------------------------------------------ -->
+    <section class="assets" aria-labelledby="switch-title">
+      <h2 id="switch-title">Switching treatments in index.html</h2>
+      <p>The header and footer each hold one <code>.wordmark</code> element. Replace it with the markup below and copy the matching CSS block from this page’s <code>&lt;style&gt;</code> into <code>styles.css</code> §3.</p>
+<pre><code>&lt;!-- #2 --&gt;
+&lt;a class="wm2" href="#top" aria-label="Poway Paseo"&gt;
+  &lt;svg class="wm2__arch" viewBox="0 0 24 14" aria-hidden="true" focusable="false"&gt;
+    &lt;path d="M1 14V11a11 11 0 0 1 22 0v3" fill="none" stroke="currentColor" stroke-width="1"/&gt;
+  &lt;/svg&gt;
+  &lt;span class="wm2__line"&gt;Paseo&lt;/span&gt;&lt;span class="wm2__line"&gt;Poway&lt;/span&gt;
+&lt;/a&gt;
+
+&lt;!-- #3 (also add Cormorant+Garamond:ital,wght@1,500;1,600 to the Google Fonts link) --&gt;
+&lt;a class="wm3" href="#top" aria-label="Poway Paseo"&gt;paseo &lt;em&gt;poway&lt;/em&gt;&lt;/a&gt;</code></pre>
+    </section>
+  </main>
+</body>
+</html>

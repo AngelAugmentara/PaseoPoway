@@ -1,0 +1,354 @@
+/* ==========================================================================
+   POWAY PASEO — hero-fullbleed.css
+   Loads AFTER styles.css. Covers the photographic sections: the
+   full-viewport hero, and Restaurant & Retail. Everything here layers a
+   photograph and an overlay behind copy; the flat-fill sections are
+   handled entirely by styles.css.
+
+   THE THREE KNOBS, all on :root below:
+     --hero-image     path to the ultra-wide rendering (JPG/WebP/AVIF)
+     --hero-scrim     0 = no darkening, 1 = solid. Start at 0.45 and adjust
+                      until the plaster copy passes contrast on your image.
+     --hero-focus     object-position of the image (x y). "50% 50%" centers;
+                      use e.g. "50% 70%" to keep the ground in frame on phones.
+     --hero-gradient  a CSS fade layered over the photo and under the scrim.
+     TEXT SHADOWS     --hero-title-shadow, --hero-lede-shadow, --hero-text-shadow
+
+     RETAIL           --retail-image / --retail-scrim / --retail-focus
+
+   Hero stacking, bottom to top:   photo, gradient, scrim, then all text.
+   Retail stacking, bottom to top: photo, scrim, then all content.
+   ========================================================================== */
+:root {
+  --hero-image: url("hero.jpg");
+
+  /* A left-to-right fade: opaque at the left edge where the copy sits, clear
+     at the right so the rendering stays visible. It is its own layer, so
+     --hero-scrim below still works as an independent dimmer on top of it.
+       --hero-gradient          the fade itself. This is a CSS linear-gradient
+                                (zero bytes, no request) traced from the
+                                original Gradient.png at rgb(5,16,35): alpha
+                                holds at 0.44 to the 40% mark, then falls to 0
+                                by 95%. Swap in `url("Gradient.png")` instead
+                                if you'd rather use the file — it is still in
+                                the project folder — and add back a preload
+                                for it in index.html's <head>.
+       --hero-gradient-opacity  0 hides it, 1 is full strength.
+       --hero-gradient-size     background-size. `100% 100%` stretches the whole
+                                ramp across the hero. Raising the first value
+                                pushes more of the dark end across; see the
+                                phone override at the bottom of this file.      */
+  --hero-gradient: linear-gradient(to right,
+      rgba(5,16,35,0.44)  0%, rgba(5,16,35,0.44) 40%, rgba(5,16,35,0.37) 50%,
+      rgba(5,16,35,0.26) 60%, rgba(5,16,35,0.13) 70%, rgba(5,16,35,0.04) 80%,
+      rgba(5,16,35,0)    95%);
+  --hero-gradient-opacity: 1;
+  --hero-gradient-size: 100% 100%;
+  --hero-scrim: 0.28;
+  --hero-scrim-color: var(--c-ink);   /* #434341. Try var(--c-dark) for a warmer scrim. */
+  --hero-focus: 50% 50%;
+  --hero-min-height: 100svh;          /* image covers the first screen; 100vh fallback below */
+
+  /* Legibility over the photograph, independent of --hero-scrim.
+     --hero-lede-weight  weight of the subhead. 400 = same as the rest of the
+                         site, 500 = light emphasis, 600 = current (Karla 600 is
+                         loaded in index.html).
+     TEXT SHADOWS        a tight shadow gives each letter its own edge where
+                         the image behind it is busy, and does nothing visible
+                         over flat areas. Three independent switches:
+                           --hero-title-shadow   the H1
+                           --hero-lede-shadow    the subhead paragraph
+                           --hero-text-shadow    everything else in the hero
+                                                 (eyebrow, microcopy, wordmark)
+                         Set any one to `none` to switch it off. Presets,
+                         softest to strongest — paste one in:
+                           none                               off
+                           0 1px 2px rgba(67, 67, 65, 0.40)   subtle
+                           0 1px 2px rgba(67, 67, 65, 0.55)   default
+                           0 1px 4px rgba(67, 67, 65, 0.70)   strong
+                           0 2px 6px rgba(67, 67, 65, 0.85)   heavy, busy image */
+  --hero-lede-weight: 700;
+  --hero-text-shadow:  0 3px 6px rgba(67, 67, 65, 0.85);
+  --hero-title-shadow: var(--hero-text-shadow);
+  --hero-lede-shadow:  0 3px 6px rgba(0, 0 , 0, 1);
+
+
+  /* ---- Restaurant & retail photograph (section 6) ---------------------
+     Same four knobs, independent of the closing section's. Point
+     --retail-image at a different file whenever you have one; the two
+     sections currently share the same photograph.                        */
+  --retail-image: url("poway-foother.jpg");
+  --retail-scrim: 0.75;
+  --retail-scrim-color: var(--c-ink);
+  --retail-focus: 79.5% 50%;
+  --retail-focus: 79.5% 50%;
+
+  /* ---- Chips on photographs (the post-submit "What are you interested in?"
+     row, in the hero and in Restaurant & Retail) ------------------------
+     Frosted glass in the dark direction: the chip blurs the photo behind it
+     and tints it with the near-black ink, so the plaster label keeps its
+     contrast whatever the photo does. The selected chip inverts to solid
+     plaster with ink text, so the chosen one is unmistakable.
+       --chip-glass        ink tint of the glass. 0.52 passes AA (4.5:1) for
+                           the plaster label even over a pure-white patch of
+                           photo with the scrim at 0; lower it only if you
+                           raise --hero-scrim, higher for a brighter photo.
+       --chip-glass-blur   how much of the photo softens behind the chip.
+       --chip-glass-edge   the hairline. A low-alpha plaster line reads as
+                           the lit rim of glass; the inset highlight on the
+                           top edge is what makes it look like glass rather
+                           than a dark pill.                               */
+  --chip-glass: 0.52;
+  --chip-glass-blur: 16px;
+  --chip-glass-edge: 0.30;
+}
+
+/* The hero becomes a dark surface: same role re-map as .section--dark */
+.hero-full {
+  --text:       var(--c-plaster);
+  --text-2:     var(--c-plaster);
+  --heading:    var(--c-plaster);
+  --rule:       var(--c-plaster);
+  --border:     var(--c-plaster);
+  --focus:      var(--c-plaster);
+  --btn-edge:   var(--c-plaster);
+  --btn-halo:   var(--c-plaster);
+  --bg:         var(--c-dark);   /* what an inverted (pressed) chip's text falls back to */
+
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: var(--hero-min-height);
+  background: var(--c-dark);          /* shows until the image loads, or if it is missing */
+  color: var(--text);
+}
+
+/* Layer 0: the photograph */
+.hero-full__bg {
+  position: absolute;
+  inset: 0;
+  z-index: -3;
+  overflow: hidden;
+}
+.hero-full__bg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: var(--hero-focus);
+}
+
+/* Layer 1: the gradient, over the photo and under the scrim */
+.hero-full__gradient {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background-image: var(--hero-gradient);
+  background-size: var(--hero-gradient-size);
+  background-position: left center;
+  background-repeat: no-repeat;
+  opacity: var(--hero-gradient-opacity);
+  pointer-events: none;
+}
+
+/* Layer 2: the adjustable scrim, above both so it dims the whole composition */
+.hero-full__scrim {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--hero-scrim-color);
+  opacity: var(--hero-scrim);
+  pointer-events: none;
+}
+
+/* Header stays a top-level landmark and is overlaid on the image */
+.site-header--over {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  z-index: 2;
+  color: var(--c-plaster);
+}
+.site-header--over .wordmark { color: var(--c-plaster); }
+.site-header--over .wordmark__rule { background: var(--c-plaster); }
+.site-header--over .eyebrow { color: var(--c-plaster); }
+.site-header--over :focus-visible { outline-color: var(--c-plaster); }
+.hero-full { padding-top: clamp(4.5rem, 8vw, 6rem); }  /* clears the overlaid header */
+
+/* Copy block: same content as before, no figure, vertically centred */
+/* All copy sits above the photo, the gradient, and the scrim. The negative
+   z-indexes above are trapped inside .hero-full by `isolation: isolate`. */
+.hero-full .hero {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: grid;
+  align-content: center;
+  width: 100%;
+  padding-block: clamp(2rem, 6vw, 5rem) clamp(3rem, 8vw, 6rem);
+}
+.hero-full .hero__copy { max-width: 38rem; }
+
+/* The subhead carries the most words at the smallest size, so it takes the
+   weight bump. Listed one by one rather than on .hero__copy so the shadow
+   never inherits into the email field or the button label. */
+.hero-full .hero__lede {
+  color: var(--c-plaster);
+  font-weight: var(--hero-lede-weight);
+}
+/* Each of these three reads its own variable, so they tune independently. */
+.hero-full .hero__title { text-shadow: var(--hero-title-shadow); }
+.hero-full .hero__lede  { text-shadow: var(--hero-lede-shadow); }
+
+.hero-full .eyebrow,
+.hero-full .form__note,
+.site-header--over .wordmark,
+.site-header--over .eyebrow {
+  text-shadow: var(--hero-text-shadow);
+}
+
+/* Never let a shadow inherit into the email field or the button label. */
+.hero-full .form__input,
+.hero-full .btn { text-shadow: none; }
+
+/* Fields on the image */
+.hero-full .form__input {
+  background: var(--c-plaster);
+  color: var(--c-ink);
+  border-color: var(--c-plaster);
+}
+.hero-full .form__input::placeholder { color: var(--c-slate); }
+
+/* Stat strip directly under a dark hero: drop its top rule to avoid a double line */
+.hero-full + .stats { border-top: 0; }
+
+@media (min-width: 60em) {
+  .hero-full .hero { grid-template-columns: 1fr; min-height: 0; }
+  .hero-full .hero__copy { grid-column: auto; }
+}
+
+/* Print: no photo, no scrim */
+@media print {
+  .hero-full__bg, .hero-full__gradient, .hero-full__scrim { display: none; }
+  .hero-full { background: none; color: var(--c-ink); }
+}
+
+/* On phones the copy runs nearly edge to edge, while a left-to-right ramp
+   squeezed into a narrow viewport leaves its right half unprotected. Stretch
+   the dark end of the ramp across instead of the full fade. Also shift the
+   image crop right (--hero-focus) to bring more of the building into frame
+   instead of the plain sky that centering leaves on a narrow screen. */
+@media (max-width: 47.99em) {
+  :root {
+    --hero-gradient-size: 260% 100%;
+    --hero-focus: 48% 50%; //48
+  }
+}
+
+
+/* --------------------------------------------------------------------------
+   PHOTOGRAPHIC SECTIONS
+   A reusable .section--photo modifier, currently used by Restaurant & Retail.
+   It keeps the light-on-dark role remapping that
+   .section--dark applies in styles.css §4, and swaps the flat fill for a
+   photograph under an adjustable overlay. Stacking order, bottom to top:
+   photo (-2), scrim (-1), then all content (1). The negative z-indexes are
+   trapped inside the section by `isolation: isolate`.
+   -------------------------------------------------------------------------- */
+.section--photo {
+  position: relative;
+  isolation: isolate;
+  background: var(--c-dark);   /* shows until the photo loads, or if it is missing */
+}
+.section--photo .section__bg {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  overflow: hidden;
+}
+.section--photo .section__bg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: var(--photo-focus, 50% 50%);
+}
+.section--photo .section__scrim {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--photo-scrim-color, var(--c-ink));
+  opacity: var(--photo-scrim, 0.6);
+  pointer-events: none;
+}
+.section--photo > .section__inner {
+  position: relative;
+  z-index: 1;
+}
+
+/* Each photographic section maps the shared mechanics above onto its own
+   knobs, so several can coexist and be tuned independently. Add a section
+   by giving it .section--photo plus its own --photo-* mapping; the
+   mechanics above carry fallbacks, so a section with no mapping still
+   renders correctly. */
+#retail {
+  --photo-scrim: var(--retail-scrim);
+  --photo-scrim-color: var(--retail-scrim-color);
+  --photo-focus: var(--retail-focus);
+}
+
+@media print {
+  .section--photo .section__bg,
+  .section--photo .section__scrim { display: none; }
+}
+
+
+/* --------------------------------------------------------------------------
+   CHIPS ON PHOTOGRAPHS
+   Overrides styles.css §15 only where a chip sits on a photo. On the flat
+   fills the original transparent-with-hairline chip already reads fine and
+   is left alone. Knobs are --chip-glass* in :root above.
+   -------------------------------------------------------------------------- */
+.hero-full .chip,
+.section--photo .chip {
+  background: rgba(67, 67, 65, var(--chip-glass));            /* ink */
+  border-color: rgba(241, 239, 235, var(--chip-glass-edge));  /* plaster rim */
+  color: var(--c-plaster);
+  -webkit-backdrop-filter: blur(var(--chip-glass-blur)) saturate(140%);
+  backdrop-filter: blur(var(--chip-glass-blur)) saturate(140%);
+  box-shadow:
+    inset 0 1px 0 rgba(241, 239, 235, 0.20),   /* lit top edge */
+    0 1px 2px rgba(0, 0, 0, 0.18);             /* seats it on the photo */
+  transition: background-color 150ms var(--ease), border-color 150ms var(--ease);
+}
+.hero-full .chip:hover,
+.section--photo .chip:hover {
+  background: rgba(67, 67, 65, calc(var(--chip-glass) + 0.14));
+  border-color: rgba(241, 239, 235, 0.60);
+}
+.hero-full .chip[aria-pressed="true"],
+.section--photo .chip[aria-pressed="true"] {
+  background: var(--c-plaster);
+  border-color: var(--c-plaster);
+  color: var(--c-ink);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.22);
+}
+
+/* No backdrop-filter support: nothing to blur, so lean on the tint alone. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .hero-full .chip,
+  .section--photo .chip { background: rgba(67, 67, 65, 0.72); }
+}
+
+/* The success-state copy around the chips sits on the same photo, so it
+   gets the same edge the hero's other text has. The email field, the Send
+   button, and the note textarea keep their solid fills and stay shadow-free. */
+.hero-full .success__title,
+.hero-full .success__lead,
+.hero-full .chips__q,
+.hero-full .chips__status,
+.hero-full .btn--text,
+.hero-full .note__label {
+  text-shadow: var(--hero-text-shadow);
+}
