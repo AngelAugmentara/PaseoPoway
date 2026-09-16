@@ -32,7 +32,6 @@ Every fact that was not supplied is a `{{TOKEN}}`. Search for `{{` across `index
 | Token | Where | What to put there |
 |---|---|---|
 | `{{SITE_URL}}` | `<head>` canonical, `og:url`, `og:image`, `twitter:image` | Production origin with no trailing slash, e.g. `https://powaypaseo.com`. Required for share cards to work. |
-| `{{FORM_ENDPOINT}}` | `main.js` (the constant) and each `<form action>` | Where submissions POST. See §6 for Formspree, Netlify Forms, and ConvertKit setups. |
 | `{{OPENING_WINDOW}}` | Stat strip, FAQ "When does Poway Paseo open?" | The opening window as you are willing to state it publicly. Keep it short; it sits in the stat strip at display size. |
 | `{{ONE_BED_LINE}}` | Residences, One Bedroom | One line for the one-bedroom, no square footage or price. |
 | `{{TWO_BED_LINE}}` | Residences, Two Bedroom | One line for the two-bedroom, no square footage or price. |
@@ -49,7 +48,6 @@ Every fact that was not supplied is a `{{TOKEN}}`. Search for `{{` across `index
 | `{{CONTACT_EMAIL}}` | Footer | General inquiries address. It is used as both link text and `mailto:` target. |
 | `{{PRIVACY_EFFECTIVE_DATE}}` | `privacy.html` header, twice | The date the policy takes effect, e.g. "March 3, 2026". Both the effective and last-updated lines read from this token; split them once you revise the policy. |
 | `{{MAILING_ADDRESS}}` | `privacy.html`, sections 1 and 17 | A postal address where privacy requests can be sent. Required in commercial email under CAN-SPAM, so you need one regardless. |
-| `{{FORM_PROVIDER}}` | `privacy.html`, sections 3 and 7 | The service receiving form submissions, e.g. "Formspree" or "Netlify". Must match `FORM_ENDPOINT` in `main.js`. |
 | `{{EMAIL_PROVIDER}}` | `privacy.html`, section 7 | The platform used to send list email, e.g. "ConvertKit". If it is the same as the form provider, use the same name in both. |
 | `{{ANALYTICS_PROVIDER}}` | `privacy.html`, sections 3 and 7 | The analytics tool, e.g. "Google Analytics" or "Plausible". If you never enable analytics, delete those two sentences rather than filling this in. |
 | `{{DATA_RETENTION_PERIOD}}` | `privacy.html`, section 12 | How long list data is kept, e.g. "up to 24 months after the community opens". |
@@ -120,20 +118,18 @@ Two consequences worth knowing: on dark sections every piece of text is plaster,
 All three forms (hero, retail, closing) share one handler and one success state. Everything configurable is at the top of `main.js`:
 
 ```js
-const FORM_ENDPOINT = '{{FORM_ENDPOINT}}';
-const FORM_ENCODING = 'form';   // 'form' or 'json'
-const PROFILE_METHOD = 'POST';  // 'PATCH' only if your endpoint can update a submission
+const FORM_ENDPOINT = '/api/lead';   // the Pages Function; see §15
+const FORM_ENCODING = 'json';
+const PROFILE_METHOD = 'POST';
 const EXTRA_FIELDS = {};
 const HONEYPOT_NAME = '_gotcha';
 ```
 
-Until `FORM_ENDPOINT` is set, submissions are simulated (400ms delay, a `console.warn`, and the success state renders) so the flow can be reviewed.
+Submissions go to a Cloudflare Pages Function at `functions/api/lead.js`, which writes to a D1 database. Because the endpoint is same-origin there is no CORS to configure, and because the database is reached from the Function rather than the browser, **no key or credential appears anywhere in `main.js`**. That file is public to every visitor, so nothing secret may ever go in it.
 
-**Formspree.** Set `FORM_ENDPOINT` to your form URL. Either encoding works. `_gotcha` is Formspree's native honeypot name.
+Full setup steps, the schema, and useful queries are in §15.
 
-**Netlify Forms.** Set `FORM_ENDPOINT = '/'`, keep `FORM_ENCODING = 'form'`, and add `data-netlify="true" netlify-honeypot="_gotcha"` to each `<form>` in `index.html`. The forms already carry `name="priority-list"` and send `form-name`.
-
-**ConvertKit.** Set `FORM_ENDPOINT` to `https://api.convertkit.com/v3/forms/FORM_ID/subscribe`, `FORM_ENCODING = 'json'`, and `EXTRA_FIELDS = { api_key: 'PUBLIC_API_KEY' }`. ConvertKit ignores unknown fields; to store interest and timeline, wrap them in a `fields: {}` object inside `send()` and create matching custom fields in ConvertKit.
+If `FORM_ENDPOINT` is ever blanked or left as a `{{TOKEN}}`, submissions are simulated instead (a short delay, a `console.warn`, and the success state still renders) so the flow can be reviewed without a backend.
 
 **Payloads.** The signup sends `email, source (hero|retail|closing), lead_id, lead_type (residential|commercial), stage: 'signup', page`. Each chip click and the concept note send a second request with the same `email` and `lead_id`, `stage: 'profile'`, and one of `interest`, `timeline`, or `concept`. Submissions from the retail form carry `lead_type: 'commercial'` and `interest: 'interest_retail'` from the first request, so they can be routed to the broker without waiting for the chip.
 
@@ -280,3 +276,105 @@ The image is the LCP element, so keep it under about 300KB (a 2400px-wide JPEG a
 **Before launch, have a California attorney review it.** This page is written to be accurate and conservative, and its factual claims match the code, but it is not legal advice. Two things in particular need a lawyer's eye: whether Valor Property Management meets the CCPA and CPRA applicability thresholds, which changes what section 11 must promise, and whether the retention period you put in `{{DATA_RETENTION_PERIOD}}` fits your record-keeping obligations.
 
 **Two promises the policy makes that operations must keep.** Every email needs a working one-click unsubscribe, which the landing page microcopy also promises. And requests to access, correct, or delete sent to `{{CONTACT_EMAIL}}` need someone actually monitoring and acting on them.
+
+---
+
+## 15. Cloudflare Pages + D1
+
+The form backend is one Pages Function writing to one D1 database.
+
+```
+functions/api/lead.js   the endpoint, POST /api/lead
+schema.sql              the two tables, run once against D1
+```
+
+### How it fits together
+
+The browser posts to `/api/lead` on your own domain. The Function validates the request and writes to D1 through a binding named `DB`. The database is never exposed to the browser, so there is no public API key to leak or rotate.
+
+Each visitor produces two or three requests: the signup, then one per optional answer. That shape is why there are two tables.
+
+**`submissions`** takes one row per request and is never updated or deleted by the app. It is the audit trail.
+
+**`leads`** holds one row per person, filling in as answers arrive. This is the table you work from. It is keyed on **email, not lead_id**, so a second signup from the same address updates the existing row instead of creating a duplicate, and `joined_at` keeps its original value. That matters beyond tidiness: your page promises "first choice of residence, in the order the list was joined," and the privacy policy states that position is set solely by when an address was added. `joined_at` is the record backing both claims, so nothing in the Function ever writes to it after the first insert.
+
+### Setup, dashboard route
+
+No Node is installed on this machine, so `wrangler` is not available locally. These steps use the Cloudflare dashboard only.
+
+1. **Create the database.** Cloudflare dashboard → **Storage & Databases → D1** → **Create**. Name it `poway-paseo`.
+2. **Create the tables.** Open the database → **Console** tab → paste the entire contents of `schema.sql` → run it. You should end up with `submissions` and `leads` under Tables.
+3. **Bind it to the site.** **Workers & Pages** → your Pages project → **Settings** → **Bindings** → **Add** → **D1 database**. Set the variable name to exactly `DB` and pick `poway-paseo`. Add the binding for **Production and Preview** both, or previews will fail while production works.
+4. **Deploy with the `functions` folder included.** Cloudflare detects `functions/` automatically and routes `/api/lead` to it. There is no build step and no config file to add. If you deploy by dragging the folder in, make sure `functions` is inside it.
+5. **Redeploy.** Bindings only reach a deployment created *after* the binding exists. If you added the binding to an already-live site, trigger a fresh deployment or the Function will return `server_misconfigured`.
+6. **Test it.** Submit the hero form on the live site, answer both questions, then run `SELECT * FROM leads;` in the D1 console. You should see one row with `interest` and `timeline` filled in, and three rows in `submissions`.
+
+### Setup, CLI route
+
+If you install Node later, the same thing from a terminal:
+
+```bash
+npx wrangler d1 create poway-paseo
+npx wrangler d1 execute poway-paseo --remote --file=./schema.sql
+npx wrangler pages deployment tail        # live logs, useful when a write fails
+```
+
+### Queries you will actually use
+
+The priority list, in order. This is the one that settles who gets first choice:
+
+```sql
+SELECT joined_at, email, lead_type, interest, timeline
+FROM leads ORDER BY joined_at ASC;
+```
+
+Commercial enquiries for the broker:
+
+```sql
+SELECT joined_at, email, concept
+FROM leads WHERE lead_type = 'commercial' ORDER BY joined_at ASC;
+```
+
+Demand by home type, for deciding what to release first:
+
+```sql
+SELECT interest, COUNT(*) AS people
+FROM leads WHERE lead_type = 'residential' AND interest IS NOT NULL
+GROUP BY interest ORDER BY people DESC;
+```
+
+Handling a deletion request, which §10 of the privacy policy commits you to:
+
+```sql
+DELETE FROM leads       WHERE email = 'someone@example.com';
+DELETE FROM submissions WHERE email = 'someone@example.com';
+```
+
+Export for an email platform:
+
+```sql
+SELECT email, joined_at, interest, timeline FROM leads ORDER BY joined_at;
+```
+
+The D1 console exports results to CSV.
+
+### What the Function refuses
+
+| Input | Result |
+|---|---|
+| Honeypot field filled | Returns success, writes nothing |
+| Malformed or oversized email | `400 invalid_email`, nothing written |
+| Body over 8KB | `400 bad_request` |
+| An `interest`, `timeline`, `source`, `lead_type` or `stage` value the page cannot produce | Discarded, stored as `NULL` |
+| Concept note over 800 characters | Truncated to 800 |
+
+Values are written through bound parameters, never string concatenation, so a crafted value cannot alter the query. Anything outside the allowlist is dropped rather than stored, so the columns your leasing team reads only ever contain values the page itself can generate.
+
+### Data minimisation
+
+The Function stores the visitor's **country** but deliberately not their IP address. An IP is personal data under CCPA, it is not needed to run a mailing list, and Cloudflare already retains it at the edge for abuse handling. Storing less is less to secure, less to disclose, and less to hand over on a deletion request. If you ever do need the IP, it is available as `request.headers.get('CF-Connecting-IP')`.
+
+### Still to wire up
+
+D1 stores the list; it cannot send email. Your microcopy and privacy policy both promise one-click unsubscribe, and CAN-SPAM requires a working unsubscribe plus a postal address in every commercial message. Pick an email platform before your first send, fill `{{EMAIL_PROVIDER}}` in `privacy.html`, and export from `leads` to seed it.
+

@@ -68,7 +68,7 @@
         <p class="hero__lede">Restaurant & Retail Space + Lofts, two-bedroom apartments, townhomes, and live-work residences, under construction in Poway, California. Join the priority list to see floor plans, pricing, and tour dates before they’re public.</p>
 
         <div class="signup" aria-live="polite">
-          <form class="form" data-signup data-source="hero" name="priority-list" method="post" action="{{FORM_ENDPOINT}}" novalidate>
+          <form class="form" data-signup data-source="hero" name="priority-list" method="post" action="/api/lead" novalidate>
             <div class="form__row">
               <div class="form__field">
                 <label for="email-hero" class="visually-hidden">Email address</label>
@@ -186,7 +186,7 @@
         </dl>
 
         <div class="retail__form signup reveal" aria-live="polite">
-          <form class="form" data-signup data-source="retail" name="priority-list" method="post" action="{{FORM_ENDPOINT}}" novalidate>
+          <form class="form" data-signup data-source="retail" name="priority-list" method="post" action="/api/lead" novalidate>
             <div class="form__row">
               <div class="form__field">
                 <label for="email-retail" class="visually-hidden">Email address</label>
@@ -265,7 +265,7 @@
         <p class="eyebrow">Priority list</p>
         <h2 id="close-title" class="section__title">Floor plans, pricing, and tour dates. This list sees them first.</h2>
         <div class="signup" aria-live="polite">
-          <form class="form" data-signup data-source="closing" name="priority-list" method="post" action="{{FORM_ENDPOINT}}" novalidate>
+          <form class="form" data-signup data-source="closing" name="priority-list" method="post" action="/api/lead" novalidate>
             <div class="form__row">
               <div class="form__field">
                 <label for="email-closing" class="visually-hidden">Email address</label>

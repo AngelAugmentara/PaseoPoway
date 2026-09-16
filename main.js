@@ -10,28 +10,28 @@
    -------------------------------------------------------------------------- */
 
 // FORM_ENDPOINT receives every submission (signup + each profiling step).
-// Compatible with:
-//   Formspree     'https://formspree.io/f/XXXXXXXX'   FORM_ENCODING 'form' or 'json'
-//   Netlify Forms '/'                                  FORM_ENCODING 'form'; also add
-//                 data-netlify="true" netlify-honeypot="_gotcha" to each <form> in index.html
-//   ConvertKit    'https://api.convertkit.com/v3/forms/FORM_ID/subscribe'
-//                 FORM_ENCODING 'json'; EXTRA_FIELDS = { api_key: 'PUBLIC_KEY' }
-//                 (ConvertKit ignores unknown fields; map interest/timeline to
-//                  custom fields via `fields: {}` in buildPayload if you want them stored.)
-const FORM_ENDPOINT = '{{FORM_ENDPOINT}}';
+// This is a Cloudflare Pages Function at functions/api/lead.js, which writes
+// to the D1 database bound as DB. Same-origin, so there is no CORS to set up
+// and no API key anywhere in this file — the browser never touches the
+// database directly. Setup steps and the schema are in README §15.
+const FORM_ENDPOINT = '/api/lead';
 
 // 'form' = application/x-www-form-urlencoded · 'json' = application/json
-const FORM_ENCODING = 'form';
+// The Function accepts either; JSON keeps the concept note's line breaks and
+// punctuation intact.
+const FORM_ENCODING = 'json';
 
 // Profiling steps (chip clicks, concept note) are sent as separate requests
-// keyed by lead_id + email. Use 'PATCH' only if your endpoint can update a
-// submission; Formspree/Netlify/ConvertKit expect 'POST'.
+// keyed by lead_id + email. The Function handles every stage as a POST and
+// merges the answers into one row per email, so leave this as 'POST'.
 const PROFILE_METHOD = 'POST';
 
-// Merged into every payload (e.g. { api_key: '...' } for ConvertKit).
+// Merged into every payload. Not needed for the Cloudflare setup; never put
+// a secret here, since this file is public to every visitor.
 const EXTRA_FIELDS = {};
 
-// Honeypot input name. Formspree recognizes "_gotcha" natively.
+// Honeypot input name. Checked here and again in the Function, since a bot
+// can post straight to the endpoint without running this script.
 const HONEYPOT_NAME = '_gotcha';
 
 
@@ -137,8 +137,7 @@ function initSignupForm(form) {
       lead_id: ctx.leadId,
       lead_type: leadType,
       stage: 'signup',
-      page: window.location.href,
-      'form-name': form.getAttribute('name') || 'priority-list'
+      page: window.location.href
     };
     if (source === 'retail') { payload.interest = 'interest_retail'; }
 
