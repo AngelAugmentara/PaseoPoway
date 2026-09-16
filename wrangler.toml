@@ -1,0 +1,30 @@
+# Cloudflare Pages configuration for Poway Paseo.
+#
+# `pages_build_output_dir` is what marks this as a Pages project rather than a
+# Worker. Without it, Wrangler reads this file as a Worker config and the D1
+# binding below attaches to nothing.
+#
+# It points at public/, which holds ONLY the files a visitor needs. Everything
+# else in this folder (README, schema.sql, this file, brand.html) stays private
+# by simply not being in there. functions/ must stay at the repo root: Pages
+# compiles it into the Worker, and moving it inside public/ would publish the
+# backend source as a downloadable file.
+#
+# While this file exists, Cloudflare IGNORES any bindings set in the dashboard.
+# This file is the single source of truth for them.
+name = "poway-paseo"
+compatibility_date = "2026-09-16"
+pages_build_output_dir = "public"
+
+# Bound as `env.DB` inside functions/api/lead.js.
+[[d1_databases]]
+binding = "DB"
+database_name = "poway-paseo-signups"
+database_id = "b1e643ee-af85-4feb-b55e-dc5e8140d176"
+
+# Preview deployments are a separate environment and need the binding declared
+# again, or previews fail while production works.
+[[env.preview.d1_databases]]
+binding = "DB"
+database_name = "poway-paseo-signups"
+database_id = "b1e643ee-af85-4feb-b55e-dc5e8140d176"

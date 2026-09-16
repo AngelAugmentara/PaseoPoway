@@ -66,7 +66,7 @@ function trackEvent(name, params) {
    DATA
    -------------------------------------------------------------------------- */
 const INTEREST_CHIPS = [
-  { value: 'interest_1br',      label: 'One bedroom',               lead: 'residential' },
+  { value: 'loft',              label: 'Loft',               lead: 'residential' },
   { value: 'interest_2br',      label: 'Two bedroom',               lead: 'residential' },
   { value: 'interest_townhome', label: 'Townhome',                  lead: 'residential' },
   { value: 'interest_livework', label: 'Live-work',                 lead: 'residential' },

@@ -1,0 +1,12 @@
+# macOS
+.DS_Store
+
+# Wrangler local state (local D1 replica, caches)
+.wrangler/
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Editor / assistant workspace
+.claude/

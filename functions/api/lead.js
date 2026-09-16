@@ -26,7 +26,7 @@ const ALLOWED = {
   stage:     ['signup', 'profile'],
   source:    ['hero', 'retail', 'closing'],
   lead_type: ['residential', 'commercial'],
-  interest:  ['interest_1br', 'interest_2br', 'interest_townhome',
+  interest:  ['loft', 'interest_2br', 'interest_townhome',
               'interest_livework', 'interest_retail', 'interest_unsure'],
   timeline:  ['timeline_6mo', 'timeline_6_12mo', 'timeline_exploring']
 };
